@@ -64,7 +64,7 @@ namespace RankingVegas
             {
                 try
                 {
-                    Process.Start("https://go.microsoft.com/fwlink/p/?LinkId=2124703");
+                    Process.Start("https://developer.microsoft.com/microsoft-edge/webview2/");
                 }
                 catch
                 {

@@ -102,6 +102,16 @@ C:\ProgramData\Sony\VEGAS Pro\Application Extensions\
 - 模板假定存在兼容的服务端实现以支持在线功能；若仅离线使用，排行榜与在线账户同步等功能将不可用。
 - WebView2 UI 依赖 WebView2 运行时；当 WebView2 不可用时，项目会回退到 WinForms UI。
 
+### Microsoft Edge WebView2 运行时
+
+基于 WebView2 的现代界面需要在目标机器上安装 Microsoft Edge WebView2 运行时（注意这与项目中的 `Microsoft.Web.WebView2` NuGet 包不同）。请从 Microsoft 官方页面选择适合的安装包：
+
+https://developer.microsoft.com/microsoft-edge/webview2/
+
+提示：较新的 Windows 10 版本和 Windows 11 在系统中已原生包含 Edge WebView2 运行时，因此在这些系统上通常不需要手动安装。
+
+如果目标机器未安装 WebView2 运行时，本扩展会自动回退到 WinForms 界面。项目在没有 WebView2 的情况下仍然可用。
+
 ---
 
 祝你开发顺利 — 用此模板快速创建自己的 VEGAS Pro 扩展。

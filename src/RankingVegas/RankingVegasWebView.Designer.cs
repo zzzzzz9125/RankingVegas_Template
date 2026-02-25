@@ -32,7 +32,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.MinimumSize = new System.Drawing.Size(400, 500);
             this.DisplayName = Localization.Text("排行", "Ranking", "ランキング");
-            this.Font = new System.Drawing.Font("Microsoft Yahei UI", 9);
+            this.Font = new System.Drawing.Font(Localization.FontFamily, 9);
 
             this.ResumeLayout(false);
         }

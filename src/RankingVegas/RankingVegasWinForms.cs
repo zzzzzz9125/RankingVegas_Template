@@ -970,7 +970,7 @@ namespace RankingVegas
                     g.FillEllipse(brush, 0, 0, 60, 60);
                 }
 
-                using (Font font = new Font("Microsoft Yahei UI", 18, FontStyle.Bold))
+                using (Font font = new Font(Localization.FontFamily, 18, FontStyle.Bold))
                 {
                     string text = "?";
                     SizeF textSize = g.MeasureString(text, font);

@@ -102,6 +102,16 @@ C:\ProgramData\Sony\VEGAS Pro\Application Extensions\
 - このテンプレートはオンライン機能をサポートするサーバー実装が存在することを前提としています。オフラインのみでの利用も可能ですが、ランキングやオンライン同期などの機能は利用できません。
 - WebView2 UI は WebView2 ランタイムを必要とします。WebView2 が利用できない場合は WinForms UI にフォールバックします。
 
+### Microsoft Edge WebView2 ランタイム
+
+WebView2 ベースのモダンな UI を使用するには、ターゲット環境に Microsoft Edge WebView2 ランタイムをインストールする必要があります（プロジェクトで使用している `Microsoft.Web.WebView2` NuGet パッケージとは別物です）。以下の公式ページから適切なインストーラーを入手してください：
+
+https://developer.microsoft.com/microsoft-edge/webview2/
+
+補足：最近の一部の Windows 10 ビルドおよび Windows 11 では、Edge WebView2 ランタイムが OS に組み込まれているため、手動でインストールする必要がない場合があります。
+
+ターゲット環境に WebView2 ランタイムがない場合、本拡張は自動的に WinForms UI にフォールバックします。WebView2 がなくてもプロジェクトは利用可能です。
+
 ---
 
 テンプレートを編集して、あなたの VEGAS Pro 拡張開発にお役立てください。

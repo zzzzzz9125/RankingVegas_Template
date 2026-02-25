@@ -54,7 +54,7 @@ namespace RankingVegas
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = RankingVegasCommand.UIBackColor;
             this.ForeColor = RankingVegasCommand.UIForeColor;
-            this.Font = new Font("Microsoft Yahei UI", 9F);
+            this.Font = new Font(Localization.FontFamily, 9F);
             
             // Header panel with group filter
             pnlHeader = new Panel
@@ -128,7 +128,7 @@ namespace RankingVegas
                 BorderStyle = BorderStyle.None,
                 BackColor = RankingVegasCommand.UIBackColor,
                 ForeColor = RankingVegasCommand.UIForeColor,
-                Font = new Font("Microsoft Yahei UI", 9F)
+                Font = new Font(Localization.FontFamily, 9F)
             };
 
             rowHeightImageList = new ImageList

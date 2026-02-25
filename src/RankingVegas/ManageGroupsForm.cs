@@ -40,7 +40,7 @@ namespace RankingVegas
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = RankingVegasCommand.UIBackColor;
             this.ForeColor = RankingVegasCommand.UIForeColor;
-            this.Font = new Font("Microsoft Yahei UI", 9F);
+            this.Font = new Font(Localization.FontFamily, 9F);
 
             lblInfo = new Label
             {
@@ -277,7 +277,7 @@ namespace RankingVegas
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = RankingVegasCommand.UIBackColor;
             this.ForeColor = RankingVegasCommand.UIForeColor;
-            this.Font = new Font("Microsoft Yahei UI", 9F);
+            this.Font = new Font(Localization.FontFamily, 9F);
 
             int y = 15;
             int labelWidth = 100;
@@ -365,7 +365,7 @@ namespace RankingVegas
                 Location = new Point(controlLeft, y),
                 Size = new Size(controlWidth, 18),
                 ForeColor = ControlPaint.Light(RankingVegasCommand.UIForeColor, 0.3f),
-                Font = new Font("Microsoft Yahei UI", 8F)
+                Font = new Font(Localization.FontFamily, 8F)
             };
             this.Controls.Add(lblUserIdsHint);
             y += 30;

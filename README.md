@@ -99,8 +99,18 @@ If you include other NuGet packages, check their individual licenses before redi
 
 ## Notes
 
-- The template assumes a compatible server implementation for online features; offline-only usage is supported but some features (leaderboards, online account sync) will be unavailable.
-- The WebView2 UI requires the WebView2 runtime. When WebView2 is not available the project falls back to a WinForms UI.
+- The template assumes a compatible server implementation to support online features; offline-only usage is supported but some features (leaderboards, online account sync) will be unavailable.
+- The WebView2 UI requires the WebView2 runtime. When WebView2 is not available the project falls back to WinForms UI.
+
+### Microsoft Edge WebView2 runtime
+
+The modern WebView2-based UI requires the Microsoft Edge WebView2 runtime (this is separate from the `Microsoft.Web.WebView2` NuGet packages used by the project). Install the Evergreen WebView2 runtime from Microsoft:
+
+https://developer.microsoft.com/microsoft-edge/webview2/
+
+Note: Many recent Windows 10 builds and Windows 11 include the Edge WebView2 runtime as part of the OS, so manual installation may not be necessary on those systems.
+
+If the WebView2 runtime is not present on the target machine the extension will automatically fall back to the WinForms UI. The project remains usable without WebView2.
 
 ---
 
