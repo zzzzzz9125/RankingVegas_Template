@@ -1,0 +1,1957 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking</title>
+    <style>
+        :root {
+            --bg-color: #3c3c3c;
+            --text-color: #e0e0e0;
+            --border-color: #555555;
+            --panel-color: #454545;
+            --accent-color: #5b9bd5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei UI', 'Segoe UI', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .app-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .lang-select {
+            background: var(--panel-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath fill='%23999' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            padding-right: 18px;
+        }
+
+        .lang-select:hover {
+            border-color: var(--accent-color);
+        }
+
+        .lang-select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .leaderboard-button, .settings-button {
+            background: var(--panel-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-button {
+            padding: 5px 8px;
+        }
+
+        .leaderboard-button:hover:not(:disabled), .settings-button:hover:not(:disabled) {
+            background: var(--border-color);
+        }
+
+        .leaderboard-button:disabled, .settings-button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .stats-container,
+        .user-card {
+            background: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+        }
+
+        .stats-container.hidden-container {
+            display: none !important;
+        }
+
+        .vegas-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .vegas-info img {
+            width: 18px;
+            height: 18px;
+        }
+
+        .vegas-info .vegas-version {
+            font-size: 11px;
+        }
+
+        .time-display {
+            text-align: left;
+            margin-bottom: 6px;
+        }
+
+        .time-label {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .time-value {
+            font-size: 28px;
+            font-weight: 600;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .status-display {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-active { background: #4caf50; }
+        .status-rendering { background: #2196f3; }
+        .status-idle { background: #ff9800; }
+        .status-error { background: #f44336; }
+
+        .hidden-element {
+            display: none !important;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 6px;
+            background: var(--bg-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            cursor: default;
+            transition: opacity 0.2s;
+        }
+
+        .user-avatar.clickable {
+            cursor: pointer;
+        }
+
+        .user-avatar.clickable:hover {
+            opacity: 0.8;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: default;
+        }
+
+        .user-name.clickable {
+            cursor: pointer;
+        }
+
+        .user-name.clickable:hover {
+            text-decoration: underline;
+        }
+
+        .user-stats {
+            font-size: 11px;
+            opacity: 0.7;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .user-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .action-button {
+            background: var(--panel-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .action-button:hover:not(:disabled) {
+            background: var(--border-color);
+        }
+
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .action-button .icon {
+            font-size: 14px;
+        }
+
+        .bind-button {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .bind-button:hover:not(:disabled) {
+            background: #4a8bc4;
+        }
+
+        .logout-button {
+            background: transparent;
+            font-size: 11px;
+            padding: 4px 8px;
+        }
+
+        /* Settings Overlay */
+        .settings-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 100;
+        }
+
+        .settings-overlay.show {
+            display: flex;
+        }
+
+        .settings-container {
+            background: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 350px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .settings-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .settings-group {
+            margin-bottom: 12px;
+        }
+
+        .settings-label {
+            font-size: 12px;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .settings-input {
+            width: 100%;
+            padding: 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 13px;
+        }
+
+        .settings-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* Use a 2x2 grid for the four show checkboxes */
+        .settings-checkbox-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 12px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .settings-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .settings-checkbox input {
+            width: 16px;
+            height: 16px;
+        }
+
+        .settings-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .settings-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--panel-color);
+            color: var(--text-color);
+        }
+
+        .settings-btn:hover {
+            background: var(--border-color);
+        }
+
+        .settings-btn.primary {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .settings-btn.primary:hover {
+            background: #4a8bc4;
+        }
+
+        /* Leaderboard Overlay */
+        .leaderboard-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 100;
+        }
+
+        .leaderboard-overlay.show {
+            display: flex;
+        }
+
+        .leaderboard-container {
+            background: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .leaderboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 8px;
+        }
+
+        .leaderboard-title {
+            font-size: 14px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-button {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .header-button:hover {
+            background: var(--border-color);
+        }
+
+        .leaderboard-toolbar {
+            display: flex;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .group-select {
+            flex: 1;
+            padding: 5px 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 12px;
+        }
+
+        .group-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .toolbar-button {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+
+        .toolbar-button:hover {
+            background: var(--border-color);
+        }
+
+        .leaderboard-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .leaderboard-list::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            background: var(--bg-color);
+            transition: transform 0.15s, box-shadow 0.15s;
+            cursor: pointer;
+        }
+
+        .leaderboard-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(2px);
+        }
+
+        .leaderboard-item.selected {
+            outline: 2px solid var(--accent-color);
+            outline-offset: -2px;
+        }
+
+        .leaderboard-item.current-user {
+            background: linear-gradient(135deg, rgba(91, 155, 213, 0.2), rgba(91, 155, 213, 0.1));
+            border: 1px solid var(--accent-color);
+        }
+
+        .leaderboard-item.top-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+        }
+
+        .leaderboard-item.top-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(192, 192, 192, 0.05));
+        }
+
+        .leaderboard-item.top-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(205, 127, 50, 0.05));
+        }
+
+        .rank-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            margin-right: 10px;
+            flex-shrink: 0;
+            background: var(--panel-color);
+        }
+
+        .rank-badge.gold {
+            background: linear-gradient(135deg, #ffd700, #ffb800);
+            color: #333;
+        }
+
+        .rank-badge.silver {
+            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
+            color: #333;
+        }
+
+        .rank-badge.bronze {
+            background: linear-gradient(135deg, #cd7f32, #b8722c);
+            color: #fff;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .small-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            background: var(--panel-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .small-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-profile-name {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-profile-id {
+            font-size: 10px;
+            opacity: 0.5;
+        }
+
+        .duration {
+            font-size: 12px;
+            opacity: 0.7;
+            text-align: right;
+            white-space: nowrap;
+            margin-left: auto;
+            padding-left: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px 20px;
+            opacity: 0.7;
+        }
+
+        .spinner {
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--text-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.1);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            opacity: 0.6;
+        }
+
+        .empty-state .icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        /* Group management overlay */
+        .group-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 200;
+        }
+
+        .group-overlay.show {
+            display: flex;
+        }
+
+        .group-container {
+            background: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 380px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .group-form-title {
+            font-size: 15px;
+            font-weight: 600;
+            padding: 14px;
+            border-bottom: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .group-form-body {
+            padding: 14px;
+            overflow-y: auto;
+        }
+
+        .group-form-row {
+            margin-bottom: 12px;
+        }
+
+        .group-form-row label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .group-form-row input[type="text"],
+        .group-form-row textarea {
+            width: 100%;
+            padding: 6px 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-color);
+            font-size: 12px;
+        }
+
+        .group-form-row textarea {
+            min-height: 60px;
+            resize: vertical;
+            font-family: 'Consolas', monospace;
+        }
+
+        .group-form-row input:focus,
+        .group-form-row textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .group-radio-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .group-radio-row label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .group-form-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 10px 14px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .group-form-buttons button {
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--panel-color);
+            color: var(--text-color);
+        }
+
+        .group-form-buttons button:hover {
+            background: var(--border-color);
+        }
+
+        .group-form-buttons button.primary {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .group-form-buttons button.primary:hover {
+            background: #4a8bc4;
+        }
+
+        .group-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            background: var(--bg-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .group-list-item:hover {
+            background: var(--border-color);
+        }
+
+        .group-list-item .group-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .group-list-item .group-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .group-list-item .group-type {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .group-list-item .group-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .group-list-item .group-action-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            width: 26px;
+            height: 26px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .group-list-item .group-action-btn:hover {
+            background: var(--border-color);
+        }
+
+        /* Add to group context menu */
+        .context-menu {
+            position: fixed;
+            background: var(--panel-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 300;
+            display: none;
+            min-width: 180px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .context-menu-item:hover {
+            background: var(--border-color);
+        }
+
+        /* Hide scrollbar in main container */
+        .container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Responsive scaling */
+        @media (max-height: 350px) {
+            .container {
+                padding: 8px;
+            }
+            .stats-container, .user-card {
+                padding: 10px;
+                margin-bottom: 8px;
+            }
+            .time-value {
+                font-size: 22px;
+            }
+            .user-avatar {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        @media (max-height: 280px) {
+            .time-label {
+                display: none;
+            }
+            .time-value {
+                font-size: 20px;
+            }
+            .app-header {
+                margin-bottom: 6px;
+            }
+            .stats-container, .user-card {
+                padding: 8px;
+                margin-bottom: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <div class="app-title" id="appTitle">Ranking</div>
+            <div class="header-buttons">
+                <select class="lang-select" id="mainLangSelect" onchange="handleMainLanguageChange()">
+                    <option value="en">EN</option>
+                    <option value="zh">中文</option>
+                    <option value="ja">日本語</option>
+                </select>
+                <button class="leaderboard-button" id="leaderboardButton" onclick="showLeaderboard()">
+                    📊 Leaderboard
+                </button>
+                <button class="settings-button" id="settingsButton" onclick="showSettings()">⚙</button>
+            </div>
+        </div>
+
+        <div class="stats-container" id="statsContainer">
+            <div class="vegas-info" id="vegasInfoDisplay">
+                <img id="vegasIcon" src="" alt="" style="display:none;">
+                <span class="vegas-version" id="vegasVersion"></span>
+            </div>
+            <div class="time-display" id="timeDisplay">
+                <div class="time-label" id="timeLabel">Total Duration</div>
+                <div class="time-value" id="timeValue">00:00:00</div>
+            </div>
+            <div class="status-display" id="statusDisplay">
+                <span class="status-dot status-active" id="statusDot"></span>
+                <span id="statusText">Waiting for sync</span>
+            </div>
+        </div>
+
+        <div class="user-card" id="userCard">
+            <div class="user-avatar" id="userAvatar" onclick="handleAvatarClick()">?</div>
+            <div class="user-info">
+                <div class="user-name" id="userName" onclick="handleNicknameClick()">Account not bound</div>
+                <div class="user-stats">
+                    <span id="userDuration">Total Duration: --</span>
+                    <span id="userRank">Rank: --</span>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button class="action-button bind-button" id="bindButton" onclick="handleBind()">
+                    <span class="icon">🔗</span>
+                    <span id="bindButtonText">Bind</span>
+                </button>
+                <button class="action-button logout-button" id="logoutButton" onclick="handleLogout()" style="display: none;">
+                    <span class="icon">🚪</span>
+                    <span id="logoutButtonText">Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="leaderboard-overlay" id="leaderboardOverlay" onclick="handleOverlayClick(event)">
+            <div class="leaderboard-container" onclick="event.stopPropagation()">
+                <div class="leaderboard-header">
+                    <button class="header-button" id="leaderboardBackButton" onclick="hideLeaderboard()" title="Back">✕</button>
+                    <div class="leaderboard-title" id="leaderboardTitle">
+                        🏆 Leaderboard
+                    </div>
+                    <button class="header-button" id="refreshButton" onclick="handleRefreshLeaderboard()" title="Refresh">🔄</button>
+                </div>
+                <div class="leaderboard-toolbar">
+                    <select class="group-select" id="groupSelect" onchange="handleGroupSelectChange()">
+                    </select>
+                    <button class="toolbar-button" id="manageGroupsBtn" onclick="showManageGroups()">⚙</button>
+                    <button class="toolbar-button" id="addToGroupBtn" onclick="showAddToGroupMenu(event)" style="display:none;">＋</button>
+                </div>
+                <div class="leaderboard-list" id="leaderboardList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <div id="loadingText">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-overlay" id="settingsOverlay" onclick="handleSettingsOverlayClick(event)">
+            <div class="settings-container" onclick="event.stopPropagation()">
+                <div class="settings-title" id="settingsTitle">Settings</div>
+
+                <div class="settings-group" id="offlineNicknameGroup">
+                    <label class="settings-label" id="offlineNicknameLabel">Offline Nickname:</label>
+                    <input type="text" class="settings-input" id="offlineNicknameInput" placeholder="Enter nickname">
+                </div>
+
+                <div class="settings-group" id="offlineIntervalGroup">
+                    <label class="settings-label" id="offlineIntervalLabel">Offline Save Interval (seconds):</label>
+                    <input type="number" class="settings-input" id="offlineIntervalInput" min="1" max="3600" value="30">
+                </div>
+
+                <div class="settings-group" id="onlineIntervalGroup">
+                    <label class="settings-label" id="onlineIntervalLabel">Online Report Interval (seconds):</label>
+                    <input type="number" class="settings-input" id="onlineIntervalInput" min="60" max="3600" value="60">
+                </div>
+
+                <!-- 2x2 grid for checkbox options -->
+                <div class="settings-checkbox-grid">
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="showVegasInfoCheck" checked>
+                        <span id="showVegasInfoLabel">Show Vegas Info</span>
+                    </label>
+
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="showTimerCheck">
+                        <span id="showTimerLabel">Show Timer</span>
+                    </label>
+
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="showStatusCheck">
+                        <span id="showStatusLabel">Show Status Bar</span>
+                    </label>
+
+                    <label class="settings-checkbox">
+                        <input type="checkbox" id="showAccountCheck" checked>
+                        <span id="showAccountLabel">Show Account</span>
+                    </label>
+                </div>
+
+                <div class="settings-group" id="uiStyleGroup">
+                    <label class="settings-label" id="uiStyleLabel">UI Style:</label>
+                    <select class="settings-input" id="uiStyleSelect" style="padding: 6px 8px;">
+                        <option value="webview">WebView</option>
+                        <option value="winforms">WinForms</option>
+                    </select>
+                </div>
+
+                <div class="settings-buttons">
+                    <button class="settings-btn" onclick="hideSettings()" id="cancelSettingsBtn">Cancel</button>
+                    <button class="settings-btn primary" onclick="saveSettings()" id="saveSettingsBtn">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group management overlay (list view) -->
+        <div class="group-overlay" id="groupManageOverlay" onclick="handleGroupManageOverlayClick(event)">
+            <div class="group-container" onclick="event.stopPropagation()">
+                <div class="group-form-title" id="groupManageTitle">Manage Groups</div>
+                <div class="group-form-body" id="groupListBody">
+                </div>
+                <div class="group-form-buttons">
+                    <button onclick="showGroupEditForm(null)">＋</button>
+                    <button onclick="hideGroupManageOverlay()">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group edit overlay (add/edit single group) -->
+        <div class="group-overlay" id="groupEditOverlay" onclick="handleGroupEditOverlayClick(event)">
+            <div class="group-container" onclick="event.stopPropagation()">
+                <div class="group-form-title" id="groupEditTitle">New Group</div>
+                <div class="group-form-body">
+                    <div class="group-form-row">
+                        <label id="groupNameLabel">Group Name:</label>
+                        <input type="text" id="groupNameInput" placeholder="">
+                    </div>
+                    <div class="group-radio-row">
+                        <label>
+                            <input type="radio" name="groupType" id="groupTypeWhitelist" value="whitelist" checked>
+                            <span id="groupWhitelistLabel">Whitelist</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="groupType" id="groupTypeBlacklist" value="blacklist">
+                            <span id="groupBlacklistLabel">Blacklist</span>
+                        </label>
+                    </div>
+                    <div class="group-form-row">
+                        <label id="groupUserIdsLabel">User IDs (comma separated):</label>
+                        <textarea id="groupUserIdsInput" placeholder="e.g. 123, 456, 789"></textarea>
+                    </div>
+                </div>
+                <div class="group-form-buttons">
+                    <button id="groupDeleteBtn" class="danger" onclick="deleteEditingGroup()" style="display:none;">🗑</button>
+                    <div style="flex:1;"></div>
+                    <button onclick="hideGroupEditOverlay()" id="groupEditCancelBtn">Cancel</button>
+                    <button class="primary" onclick="saveGroupEdit()" id="groupEditSaveBtn">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Context menu for adding selected users to a group -->
+        <div class="context-menu" id="addToGroupMenu"></div>
+    </div>
+
+    <script>
+        let currentUserInfo = null;
+        let isConfigured = false;
+        let isOffline = false;
+        let offlineAvatarUrl = '';
+        let showTimer = true;
+        let showStatus = true;
+        let showVegasInfo = true;
+        let showAccount = true;
+        let currentLanguage = 'en';
+        let appProfile = {
+            avatarOrigin: '',
+            leaderboardName: 'Leaderboard'
+        };
+
+        // Group state
+        let groupsData = { groups: [], selectedGroupId: '__total__' };
+        let cachedLeaderboard = [];
+        let selectedUserIds = new Set();
+        let editingGroupId = null;
+
+        let localizedStrings = {
+            title: 'Ranking',
+            timeLabel: 'Total Duration',
+            waitingSync: 'Waiting for sync',
+            notBound: 'Account not bound',
+            totalDurationPrefix: 'Total Duration: ',
+            rankPrefix: 'Rank: ',
+            bindAccount: 'Bind',
+            rebindAccount: 'Rebind',
+            leaderboardTitle: '🏆 Leaderboard',
+            leaderboardButton: '📊 Leaderboard',
+            leaderboardBack: 'Back',
+            refresh: 'Refresh',
+            loading: 'Loading...',
+            noData: 'No data',
+            unknownUser: 'Unknown user',
+            notConfigured: 'Configuration incomplete',
+            offlineAccount: 'Offline Account',
+            hoursUnit: 'hrs',
+            minutesUnit: 'mins',
+            secondsUnit: 'secs',
+            logout: 'Logout',
+            settings: 'Settings',
+            offlineNickname: 'Offline Nickname:',
+            offlineNicknamePlaceholder: 'Enter nickname',
+            offlineSaveInterval: 'Offline Save Interval (seconds):',
+            onlineReportInterval: 'Online Report Interval (seconds):',
+            showVegasInfo: 'Show Vegas Info',
+            showTimer: 'Show Timer',
+            showStatusBar: 'Show Status Bar',
+            showAccount: 'Show Account',
+            save: 'Save',
+            cancel: 'Cancel',
+            language: 'Language:',
+            uiStyle: 'UI Style:',
+            manageGroups: 'Manage Groups',
+            total: 'Total',
+            whitelist: 'Whitelist',
+            blacklist: 'Blacklist',
+            groupName: 'Group Name:',
+            groupUserIds: 'User IDs (comma separated):',
+            newGroup: 'New Group',
+            editGroup: 'Edit Group',
+            addToGroup: 'Add to Group',
+            deleteGroup: 'Delete',
+            whitelistPrefix: '[W]',
+            blacklistPrefix: '[B]'
+        };
+
+        function applyTheme(bgColor, textColor, borderColor, panelColor) {
+            document.documentElement.style.setProperty('--bg-color', bgColor);
+            document.documentElement.style.setProperty('--text-color', textColor);
+            document.documentElement.style.setProperty('--border-color', borderColor);
+            document.documentElement.style.setProperty('--panel-color', panelColor);
+        }
+
+        function applyLocalization(strings) {
+            if (strings) {
+                localizedStrings = { ...localizedStrings, ...strings };
+            }
+
+            if (strings && strings.languageCode) {
+                currentLanguage = strings.languageCode;
+                const langSelect = document.getElementById('mainLangSelect');
+                if (langSelect) {
+                    langSelect.value = currentLanguage;
+                }
+            }
+
+            if (strings && strings.fontFamily) {
+                document.body.style.fontFamily = strings.fontFamily;
+            }
+
+            document.title = localizedStrings.title || document.title;
+            document.getElementById('timeLabel').textContent = localizedStrings.timeLabel;
+            document.getElementById('leaderboardTitle').textContent = localizedStrings.leaderboardTitle;
+            document.getElementById('leaderboardButton').innerHTML = `📊 ${localizedStrings.leaderboardButton.replace('📊 ', '')}`;
+            document.getElementById('refreshButton').title = localizedStrings.refresh;
+            document.getElementById('loadingText').textContent = localizedStrings.loading;
+            document.getElementById('logoutButtonText').textContent = localizedStrings.logout || 'Logout';
+            document.getElementById('groupManageTitle').textContent = localizedStrings.manageGroups || 'Manage Groups';
+            document.getElementById('manageGroupsBtn').title = localizedStrings.manageGroups || 'Manage Groups';
+
+            applySettingsLocalization();
+            applyGroupLocalization();
+            refreshGroupSelect();
+
+            if (currentUserInfo) {
+                updateUserInfo(currentUserInfo);
+            } else {
+                document.getElementById('userName').textContent = localizedStrings.notBound;
+                document.getElementById('userDuration').textContent = `${localizedStrings.totalDurationPrefix}--`;
+                document.getElementById('userRank').textContent = `${localizedStrings.rankPrefix}--`;
+                document.getElementById('bindButtonText').textContent = localizedStrings.bindAccount;
+            }
+        }
+
+        function applySettingsLocalization() {
+            document.getElementById('settingsTitle').textContent = localizedStrings.settings || 'Settings';
+            document.getElementById('offlineNicknameLabel').textContent = localizedStrings.offlineNickname || 'Offline Nickname:';
+            document.getElementById('offlineNicknameInput').placeholder = localizedStrings.offlineNicknamePlaceHolder || 'Enter nickname';
+            document.getElementById('offlineIntervalLabel').textContent = localizedStrings.offlineSaveInterval || 'Offline Save Interval (seconds):';
+            document.getElementById('onlineIntervalLabel').textContent = localizedStrings.onlineReportInterval || 'Online Report Interval (seconds):';
+            document.getElementById('showVegasInfoLabel').textContent = localizedStrings.showVegasInfo || 'Show Vegas Info';
+            document.getElementById('showTimerLabel').textContent = localizedStrings.showTimer || 'Show Timer';
+            document.getElementById('showStatusLabel').textContent = localizedStrings.showStatusBar || 'Show Status Bar';
+            document.getElementById('showAccountLabel').textContent = localizedStrings.showAccount || 'Show Account';
+            document.getElementById('uiStyleLabel').textContent = localizedStrings.uiStyle || 'UI Style:';
+            document.getElementById('saveSettingsBtn').textContent = localizedStrings.save || 'Save';
+            document.getElementById('cancelSettingsBtn').textContent = localizedStrings.cancel || 'Cancel';
+        }
+
+        function applyGroupLocalization() {
+            document.getElementById('groupNameLabel').textContent = localizedStrings.groupName || 'Group Name:';
+            document.getElementById('groupUserIdsLabel').textContent = localizedStrings.groupUserIds || 'User IDs (comma separated):';
+            document.getElementById('groupWhitelistLabel').textContent = localizedStrings.whitelist || 'Whitelist';
+            document.getElementById('groupBlacklistLabel').textContent = localizedStrings.blacklist || 'Blacklist';
+            document.getElementById('groupEditCancelBtn').textContent = localizedStrings.cancel || 'Cancel';
+            document.getElementById('groupEditSaveBtn').textContent = localizedStrings.save || 'Save';
+        }
+
+        function applyAppProfile(profile) {
+            if (profile) {
+                appProfile = { ...appProfile, ...profile };
+                if (appProfile.leaderboardName) {
+                    document.getElementById('leaderboardTitle').textContent = `🏆 ${appProfile.leaderboardName}`;
+                }
+            }
+        }
+
+        function updateAppTitle(title) {
+            const appTitle = title || localizedStrings.title;
+            document.title = appTitle;
+            document.getElementById('appTitle').textContent = appTitle;
+        }
+
+        function updateOfflineState(offline) {
+            isOffline = !!offline;
+            const leaderboardButton = document.getElementById('leaderboardButton');
+            const logoutButton = document.getElementById('logoutButton');
+            const bindButton = document.getElementById('bindButton');
+            const avatarEl = document.getElementById('userAvatar');
+            const userNameEl = document.getElementById('userName');
+
+            leaderboardButton.disabled = !isConfigured;
+
+            if (isOffline) {
+                bindButton.style.display = 'flex';
+                logoutButton.style.display = 'none';
+                avatarEl.classList.add('clickable');
+                userNameEl.classList.add('clickable');
+            } else {
+                bindButton.style.display = 'none';
+                logoutButton.style.display = 'flex';
+                avatarEl.classList.remove('clickable');
+                userNameEl.classList.remove('clickable');
+            }
+
+            updateSettingsVisibility();
+        }
+
+        function updateSettingsVisibility() {
+            document.getElementById('offlineNicknameGroup').style.display = isOffline ? 'block' : 'none';
+            document.getElementById('offlineIntervalGroup').style.display = isOffline ? 'block' : 'none';
+            document.getElementById('onlineIntervalGroup').style.display = isOffline ? 'none' : 'block';
+        }
+
+        function updateHideSettings(timerHidden, statusHidden) {
+            updateShowSettings(!timerHidden, !statusHidden, showAccount, showVegasInfo);
+        }
+
+        function applyHideSettings() {
+            applyShowSettings();
+        }
+
+        function updateShowSettings(timerVisible, statusVisible, accountVisible, vegasInfoVisible) {
+            showTimer = !!timerVisible;
+            showStatus = !!statusVisible;
+            showAccount = accountVisible !== false;
+            showVegasInfo = vegasInfoVisible !== false;
+            applyShowSettings();
+        }
+
+        function applyShowSettings() {
+            const statsContainer = document.getElementById('statsContainer');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const statusDisplay = document.getElementById('statusDisplay');
+            const vegasInfoDisplay = document.getElementById('vegasInfoDisplay');
+            const userCard = document.getElementById('userCard');
+
+            timeDisplay.classList.toggle('hidden-element', !showTimer);
+            statusDisplay.classList.toggle('hidden-element', !showStatus);
+            vegasInfoDisplay.classList.toggle('hidden-element', !showVegasInfo);
+            statsContainer.classList.toggle('hidden-container', !showTimer && !showStatus && !showVegasInfo);
+            userCard.classList.toggle('hidden-element', !showAccount);
+
+            document.getElementById('showTimerCheck').checked = showTimer;
+            document.getElementById('showStatusCheck').checked = showStatus;
+            document.getElementById('showVegasInfoCheck').checked = showVegasInfo;
+            document.getElementById('showAccountCheck').checked = showAccount;
+        }
+
+        function updateVegasInfo(version, iconDataUrl) {
+            const vegasIconEl = document.getElementById('vegasIcon');
+            const vegasVersionEl = document.getElementById('vegasVersion');
+
+            if (version) {
+                vegasVersionEl.textContent = version;
+            }
+
+            if (iconDataUrl) {
+                vegasIconEl.src = iconDataUrl;
+                vegasIconEl.style.display = 'inline';
+            }
+        }
+
+        function updateTime(hours, minutes, seconds) {
+            document.getElementById('timeValue').textContent =
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function updateTimeLabel(label) {
+            document.getElementById('timeLabel').textContent = label;
+        }
+
+        function updateStatus(status, statusType) {
+            document.getElementById('statusText').textContent = status;
+            const statusDot = document.getElementById('statusDot');
+            statusDot.className = 'status-dot';
+            if (statusType === 'idle') statusDot.classList.add('status-idle');
+            else if (statusType === 'rendering') statusDot.classList.add('status-rendering');
+            else if (statusType === 'error') statusDot.classList.add('status-error');
+            else statusDot.classList.add('status-active');
+        }
+
+        function updateUserInfo(userInfo) {
+            currentUserInfo = userInfo || null;
+            const logoutButton = document.getElementById('logoutButton');
+            const bindButton = document.getElementById('bindButton');
+            const avatarEl = document.getElementById('userAvatar');
+            const userNameEl = document.getElementById('userName');
+
+            if (!userInfo) {
+                userNameEl.textContent = localizedStrings.notBound;
+                document.getElementById('userDuration').textContent = `${localizedStrings.totalDurationPrefix}--`;
+                document.getElementById('userRank').textContent = `${localizedStrings.rankPrefix}--`;
+                avatarEl.innerHTML = '?';
+                avatarEl.classList.remove('clickable');
+                userNameEl.classList.remove('clickable');
+                document.getElementById('bindButtonText').textContent = localizedStrings.bindAccount;
+                bindButton.style.display = 'flex';
+                logoutButton.style.display = 'none';
+                return;
+            }
+
+            userNameEl.textContent = userInfo.nickname || localizedStrings.unknownUser;
+            document.getElementById('userDuration').textContent =
+                `${localizedStrings.totalDurationPrefix}${formatDuration(userInfo.totalDuration)}`;
+
+            document.getElementById('userRank').textContent = userInfo.rank > 0
+                ? `${localizedStrings.rankPrefix}${userInfo.rank}`
+                : `${localizedStrings.rankPrefix}--`;
+
+            if (userInfo.isOffline) {
+                document.getElementById('bindButtonText').textContent = localizedStrings.bindAccount;
+                bindButton.style.display = 'flex';
+                logoutButton.style.display = 'none';
+                avatarEl.classList.add('clickable');
+                userNameEl.classList.add('clickable');
+
+                if (offlineAvatarUrl) {
+                    avatarEl.innerHTML = `<img src="${offlineAvatarUrl}" alt="Avatar" onerror="this.parentElement.innerHTML='👤'">`;
+                } else {
+                    avatarEl.innerHTML = '👤';
+                }
+            } else {
+                bindButton.style.display = 'none';
+                logoutButton.style.display = 'flex';
+                avatarEl.classList.remove('clickable');
+                userNameEl.classList.remove('clickable');
+
+                if (userInfo.avatar) {
+                    let avatarUrl = userInfo.avatar;
+                    if (!avatarUrl.startsWith('http')) {
+                        avatarUrl = appProfile.avatarOrigin + avatarUrl;
+                    }
+                    avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Avatar" onerror="this.parentElement.innerHTML='?'">`;
+                } else {
+                    avatarEl.innerHTML = '?';
+                }
+            }
+        }
+
+        function setOfflineAvatar(avatarDataUrl) {
+            offlineAvatarUrl = avatarDataUrl || '';
+            if (isOffline && currentUserInfo && currentUserInfo.isOffline) {
+                const avatarEl = document.getElementById('userAvatar');
+                if (offlineAvatarUrl) {
+                    avatarEl.innerHTML = `<img src="${offlineAvatarUrl}" alt="Avatar" onerror="this.parentElement.innerHTML='👤'">`;
+                } else {
+                    avatarEl.innerHTML = '👤';
+                }
+            }
+        }
+
+        // ========== Leaderboard with group filtering ==========
+
+        function updateLeaderboard(leaderboard) {
+            cachedLeaderboard = leaderboard || [];
+            selectedUserIds.clear();
+            renderFilteredLeaderboard();
+        }
+
+        function renderFilteredLeaderboard() {
+            const listEl = document.getElementById('leaderboardList');
+            let entries = cachedLeaderboard;
+
+            // Apply group filter
+            const group = getSelectedGroup();
+            if (group) {
+                const idSet = new Set(group.userIds || []);
+                if (group.isWhitelist) {
+                    entries = entries.filter(e => idSet.has(e.userId));
+                } else {
+                    entries = entries.filter(e => !idSet.has(e.userId));
+                }
+                // Re-rank
+                entries = entries.map((e, i) => ({ ...e, rank: i + 1 }));
+            }
+
+            if (!entries || entries.length === 0) {
+                listEl.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div>${localizedStrings.noData}</div></div>`;
+                updateAddToGroupButton();
+                return;
+            }
+
+            let html = '';
+            entries.forEach(entry => {
+                const isCurrentUser = currentUserInfo && !currentUserInfo.isOffline && entry.userId === currentUserInfo.userId;
+                const isSelected = selectedUserIds.has(entry.userId);
+                let itemClass = 'leaderboard-item';
+                if (isCurrentUser) itemClass += ' current-user';
+                if (entry.rank === 1) itemClass += ' top-1';
+                else if (entry.rank === 2) itemClass += ' top-2';
+                else if (entry.rank === 3) itemClass += ' top-3';
+                if (isSelected) itemClass += ' selected';
+
+                let avatarHtml = '?';
+                if (entry.avatar) {
+                    let avatarUrl = entry.avatar;
+                    if (!avatarUrl.startsWith('http')) {
+                        avatarUrl = appProfile.avatarOrigin + avatarUrl;
+                    }
+                    avatarHtml = `<img src="${avatarUrl}" alt="" onerror="this.parentElement.innerHTML='?'">`;
+                }
+
+                let rankBadgeClass = 'rank-badge';
+                let rankContent = entry.rank;
+                if (entry.rank === 1) { rankBadgeClass += ' gold'; rankContent = '🥇'; }
+                else if (entry.rank === 2) { rankBadgeClass += ' silver'; rankContent = '🥈'; }
+                else if (entry.rank === 3) { rankBadgeClass += ' bronze'; rankContent = '🥉'; }
+
+                html += `
+                    <div class="${itemClass}" data-userid="${entry.userId}" onclick="toggleLeaderboardSelection(${entry.userId}, event)">
+                        <div class="${rankBadgeClass}">${rankContent}</div>
+                        <div class="user-profile">
+                            <div class="small-avatar">${avatarHtml}</div>
+                            <div class="user-profile-info">
+                                <div class="user-profile-name">${escapeHtml(entry.nickname)}</div>
+                                <div class="user-profile-id">ID: ${entry.userId}</div>
+                            </div>
+                        </div>
+                        <div class="duration">${formatDuration(entry.totalDuration)}</div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+            updateAddToGroupButton();
+        }
+
+        function toggleLeaderboardSelection(userId, event) {
+            if (event.ctrlKey || event.metaKey) {
+                if (selectedUserIds.has(userId)) {
+                    selectedUserIds.delete(userId);
+                } else {
+                    selectedUserIds.add(userId);
+                }
+            } else {
+                if (selectedUserIds.has(userId) && selectedUserIds.size === 1) {
+                    selectedUserIds.clear();
+                } else {
+                    selectedUserIds.clear();
+                    selectedUserIds.add(userId);
+                }
+            }
+
+            // Update visual selection
+            document.querySelectorAll('.leaderboard-item').forEach(el => {
+                const id = parseInt(el.dataset.userid);
+                el.classList.toggle('selected', selectedUserIds.has(id));
+            });
+            updateAddToGroupButton();
+        }
+
+        function updateAddToGroupButton() {
+            const btn = document.getElementById('addToGroupBtn');
+            const hasGroups = groupsData.groups && groupsData.groups.length > 0;
+            const hasSelection = selectedUserIds.size > 0;
+            btn.style.display = (hasGroups && hasSelection) ? 'inline-block' : 'none';
+        }
+
+        function showAddToGroupMenu(event) {
+            event.stopPropagation();
+            if (selectedUserIds.size === 0 || !groupsData.groups || groupsData.groups.length === 0) return;
+
+            const menu = document.getElementById('addToGroupMenu');
+            menu.innerHTML = '';
+
+            groupsData.groups.forEach(g => {
+                const prefix = g.isWhitelist ? (localizedStrings.whitelistPrefix || '[W]') : (localizedStrings.blacklistPrefix || '[B]');
+                const item = document.createElement('div');
+                item.className = 'context-menu-item';
+                item.textContent = `${prefix} ${g.name}`;
+                item.onclick = () => {
+                    addSelectedUsersToGroup(g.id);
+                    hideContextMenu();
+                };
+                menu.appendChild(item);
+            });
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            menu.style.left = rect.left + 'px';
+            menu.style.top = (rect.bottom + 4) + 'px';
+            menu.classList.add('show');
+
+            setTimeout(() => {
+                document.addEventListener('click', hideContextMenu, { once: true });
+            }, 0);
+        }
+
+        function hideContextMenu() {
+            document.getElementById('addToGroupMenu').classList.remove('show');
+        }
+
+        function addSelectedUsersToGroup(groupId) {
+            if (selectedUserIds.size === 0) return;
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({
+                    action: 'addUsersToGroup',
+                    data: { groupId: groupId, userIds: Array.from(selectedUserIds) }
+                });
+            }
+            selectedUserIds.clear();
+            document.querySelectorAll('.leaderboard-item.selected').forEach(el => el.classList.remove('selected'));
+            updateAddToGroupButton();
+        }
+
+        // ========== Group management ==========
+
+        function updateGroups(data) {
+            if (data) {
+                groupsData = data;
+            }
+            refreshGroupSelect();
+            renderFilteredLeaderboard();
+        }
+
+        function getSelectedGroup() {
+            const id = groupsData.selectedGroupId;
+            if (!id || id === '__total__') return null;
+            return (groupsData.groups || []).find(g => g.id === id) || null;
+        }
+
+        function refreshGroupSelect() {
+            const select = document.getElementById('groupSelect');
+            const currentValue = groupsData.selectedGroupId || '__total__';
+            select.innerHTML = '';
+
+            const totalOpt = document.createElement('option');
+            totalOpt.value = '__total__';
+            totalOpt.textContent = localizedStrings.total || 'Total';
+            select.appendChild(totalOpt);
+
+            if (groupsData.groups) {
+                groupsData.groups.forEach(g => {
+                    const opt = document.createElement('option');
+                    opt.value = g.id;
+                    const prefix = g.isWhitelist ? (localizedStrings.whitelistPrefix || '[W]') : (localizedStrings.blacklistPrefix || '[B]');
+                    opt.textContent = `${prefix} ${g.name}`;
+                    select.appendChild(opt);
+                });
+            }
+
+            select.value = currentValue;
+            if (select.value !== currentValue) {
+                select.value = '__total__';
+            }
+        }
+
+        function handleGroupSelectChange() {
+            const groupId = document.getElementById('groupSelect').value;
+            groupsData.selectedGroupId = groupId;
+
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'selectGroup', data: groupId });
+            }
+            renderFilteredLeaderboard();
+        }
+
+        function showManageGroups() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'getGroups' });
+            }
+            renderGroupList();
+            document.getElementById('groupManageOverlay').classList.add('show');
+        }
+
+        function hideGroupManageOverlay() {
+            document.getElementById('groupManageOverlay').classList.remove('show');
+        }
+
+        function handleGroupManageOverlayClick(event) {
+            if (event.target.id === 'groupManageOverlay') hideGroupManageOverlay();
+        }
+
+        function renderGroupList() {
+            const body = document.getElementById('groupListBody');
+            if (!groupsData.groups || groupsData.groups.length === 0) {
+                body.innerHTML = `<div class="empty-state"><div class="icon">📁</div><div>${localizedStrings.noData}</div></div>`;
+                return;
+            }
+
+            let html = '';
+            groupsData.groups.forEach(g => {
+                const typeText = g.isWhitelist ? (localizedStrings.whitelist || 'Whitelist') : (localizedStrings.blacklist || 'Blacklist');
+                const memberCount = (g.userIds || []).length;
+                html += `
+                    <div class="group-list-item" onclick="showGroupEditForm('${g.id}')">
+                        <div class="group-info">
+                            <div class="group-name">${escapeHtml(g.name)}</div>
+                            <div class="group-type">${typeText} · ${memberCount} IDs</div>
+                        </div>
+                        <div class="group-actions">
+                            <button class="group-action-btn" onclick="event.stopPropagation(); showGroupEditForm('${g.id}')" title="Edit">✏</button>
+                            <button class="group-action-btn" onclick="event.stopPropagation(); deleteGroup('${g.id}')" title="Delete">🗑</button>
+                        </div>
+                    </div>`;
+            });
+            body.innerHTML = html;
+        }
+
+        function showGroupEditForm(groupId) {
+            editingGroupId = groupId;
+            const nameInput = document.getElementById('groupNameInput');
+            const userIdsInput = document.getElementById('groupUserIdsInput');
+            const deleteBtn = document.getElementById('groupDeleteBtn');
+            const titleEl = document.getElementById('groupEditTitle');
+            const whitelistRadio = document.getElementById('groupTypeWhitelist');
+            const blacklistRadio = document.getElementById('groupTypeBlacklist');
+
+            if (groupId) {
+                const group = (groupsData.groups || []).find(g => g.id === groupId);
+                if (!group) return;
+                titleEl.textContent = localizedStrings.editGroup || 'Edit Group';
+                nameInput.value = group.name || '';
+                whitelistRadio.checked = group.isWhitelist;
+                blacklistRadio.checked = !group.isWhitelist;
+                userIdsInput.value = (group.userIds || []).join(', ');
+                deleteBtn.style.display = 'inline-block';
+            } else {
+                titleEl.textContent = localizedStrings.newGroup || 'New Group';
+                nameInput.value = '';
+                whitelistRadio.checked = true;
+                blacklistRadio.checked = false;
+                userIdsInput.value = '';
+                deleteBtn.style.display = 'none';
+            }
+
+            document.getElementById('groupEditOverlay').classList.add('show');
+        }
+
+        function hideGroupEditOverlay() {
+            document.getElementById('groupEditOverlay').classList.remove('show');
+            editingGroupId = null;
+        }
+
+        function handleGroupEditOverlayClick(event) {
+            if (event.target.id === 'groupEditOverlay') hideGroupEditOverlay();
+        }
+
+        function saveGroupEdit() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            if (!name) return;
+
+            const isWhitelist = document.getElementById('groupTypeWhitelist').checked;
+            const userIdsString = document.getElementById('groupUserIdsInput').value;
+
+            if (editingGroupId) {
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({
+                        action: 'editGroup',
+                        data: { id: editingGroupId, name: name, isWhitelist: isWhitelist, userIdsString: userIdsString }
+                    });
+                }
+            } else {
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({
+                        action: 'addGroup',
+                        data: { name: name, isWhitelist: isWhitelist, userIdsString: userIdsString }
+                    });
+                }
+            }
+
+            hideGroupEditOverlay();
+        }
+
+        function deleteEditingGroup() {
+            if (!editingGroupId) return;
+            deleteGroup(editingGroupId);
+            hideGroupEditOverlay();
+        }
+
+        function deleteGroup(groupId) {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'deleteGroup', data: groupId });
+            }
+        }
+
+        // Callback from C# after group changes
+        function onGroupSelected(groupId) {
+            groupsData.selectedGroupId = groupId;
+            refreshGroupSelect();
+            renderFilteredLeaderboard();
+        }
+
+        // ========== Utility ==========
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDuration(seconds) {
+            if (typeof seconds !== 'number' || isNaN(seconds)) return '--';
+
+            const hours = seconds / 3600;
+            const minutes = seconds / 60;
+
+            if (hours >= 1) {
+                return `${hours.toFixed(1)} ${localizedStrings.hoursUnit}`;
+            } else if (minutes >= 1) {
+                return `${Math.floor(minutes)} ${localizedStrings.minutesUnit}`;
+            } else {
+                return `${seconds} ${localizedStrings.secondsUnit}`;
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('leaderboardList').innerHTML =
+                `<div class="error-message">${escapeHtml(message)}</div>`;
+        }
+
+        function updateConfiguredState(configured) {
+            isConfigured = configured;
+            document.getElementById('bindButton').disabled = !configured;
+            if (!configured) {
+                updateStatus(localizedStrings.notConfigured, 'error');
+            }
+        }
+
+        // ========== Actions ==========
+
+        function handleBind() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'bind' });
+            }
+        }
+
+        function handleLogout() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'logout' });
+            }
+        }
+
+        function handleAvatarClick() {
+            if (isOffline && window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'selectAvatar' });
+            }
+        }
+
+        function handleNicknameClick() {
+            if (isOffline && window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'editNickname' });
+            }
+        }
+
+        function handleRefresh() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'refresh' });
+            }
+        }
+
+        function handleRefreshLeaderboard() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'showLeaderboard' });
+            }
+        }
+
+        function showLeaderboard() {
+            document.getElementById('leaderboardOverlay').classList.add('show');
+            selectedUserIds.clear();
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'getGroups' });
+                window.chrome.webview.postMessage({ action: 'showLeaderboard' });
+            }
+        }
+
+        function hideLeaderboard() {
+            document.getElementById('leaderboardOverlay').classList.remove('show');
+            hideContextMenu();
+        }
+
+        function handleOverlayClick(event) {
+            if (event.target.id === 'leaderboardOverlay') {
+                hideLeaderboard();
+            }
+        }
+
+        function showSettings() {
+            updateSettingsVisibility();
+            document.getElementById('settingsOverlay').classList.add('show');
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'getSettings' });
+            }
+        }
+
+        function hideSettings() {
+            document.getElementById('settingsOverlay').classList.remove('show');
+        }
+
+        function handleSettingsOverlayClick(event) {
+            if (event.target.id === 'settingsOverlay') {
+                hideSettings();
+            }
+        }
+
+        function loadSettings(settings) {
+            if (settings) {
+                document.getElementById('offlineNicknameInput').value = settings.offlineNickname || '';
+                document.getElementById('offlineIntervalInput').value = settings.offlineSaveInterval || 30;
+                document.getElementById('onlineIntervalInput').value = settings.onlineReportInterval || 60;
+                document.getElementById('showTimerCheck').checked = settings.showTimer !== false;
+                document.getElementById('showStatusCheck').checked = settings.showStatus !== false;
+                document.getElementById('showVegasInfoCheck').checked = settings.showVegasInfo !== false;
+                document.getElementById('showAccountCheck').checked = settings.showAccount !== false;
+                document.getElementById('uiStyleSelect').value = settings.uiStyle || 'webview';
+                currentLanguage = settings.language || 'en';
+                document.getElementById('mainLangSelect').value = currentLanguage;
+                updateShowSettings(settings.showTimer !== false, settings.showStatus !== false, settings.showAccount !== false, settings.showVegasInfo !== false);
+            }
+        }
+
+        function saveSettings() {
+            const settings = {
+                offlineNickname: document.getElementById('offlineNicknameInput').value,
+                offlineSaveInterval: parseInt(document.getElementById('offlineIntervalInput').value) || 30,
+                onlineReportInterval: parseInt(document.getElementById('onlineIntervalInput').value) || 60,
+                showTimer: document.getElementById('showTimerCheck').checked,
+                showStatus: document.getElementById('showStatusCheck').checked,
+                showVegasInfo: document.getElementById('showVegasInfoCheck').checked,
+                showAccount: document.getElementById('showAccountCheck').checked,
+                language: currentLanguage,
+                uiStyle: document.getElementById('uiStyleSelect').value
+            };
+
+            showTimer = settings.showTimer;
+            showStatus = settings.showStatus;
+            showVegasInfo = settings.showVegasInfo;
+            showAccount = settings.showAccount;
+            applyShowSettings();
+
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'saveSettings', data: settings });
+            }
+
+            hideSettings();
+        }
+
+        // Main language selector on header - changes language immediately via F5-like refresh
+        function handleMainLanguageChange() {
+            const newLang = document.getElementById('mainLangSelect').value;
+            if (newLang === currentLanguage) return;
+            currentLanguage = newLang;
+
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'changeLanguage', data: newLang });
+            }
+        }
+
+        window.addEventListener('load', () => {
+            applyLocalization(localizedStrings);
+            try { document.getElementById('mainLangSelect').value = currentLanguage; } catch (e) {}
+            try { applyShowSettings(); } catch (e) {}
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: 'ready' });
+            }
+        });
+    </script>
+</body>
+</html>
