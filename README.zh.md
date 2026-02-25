@@ -79,6 +79,8 @@ C:\ProgramData\Sony\VEGAS Pro\Application Extensions\
 
 请选择与目标机器上已安装的 VEGAS Pro 版本和发行版相匹配的文件夹进行安装。
 
+安装完成后，可在 VEGAS Pro 菜单栏中通过：`视图` → `扩展` → `RankingVegas` 打开本扩展。
+
 ### 安全性建议
 
 .NET 程序容易被反编译，建议不要在可分发的二进制中明文存储敏感信息（例如 API Key、App Secret）。可考虑使用混淆工具或在服务端实现令牌交换来保护密钥。

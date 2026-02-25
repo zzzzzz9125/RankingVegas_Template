@@ -79,6 +79,8 @@ C:\ProgramData\Sony\VEGAS Pro\Application Extensions\
 
 Make sure to choose the folder that matches the installed VEGAS Pro version on the target machine.
 
+After installation you can open the extension in VEGAS Pro from the menu bar: `View` → `Extensions` → `RankingVegas`.
+
 ### Security / obfuscation
 
 Because .NET assemblies can be decompiled, avoid embedding sensitive secrets (API keys, secrets) in the distributed binaries. Consider using obfuscation or a secure server-side token exchange to protect credentials.

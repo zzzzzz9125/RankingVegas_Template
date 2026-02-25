@@ -79,6 +79,8 @@ C:\ProgramData\Sony\VEGAS Pro\Application Extensions\
 
 ターゲットマシンにインストールされている VEGAS Pro のバージョンに合ったフォルダーを選択してください。
 
+インストール後、VEGAS Pro のメニューバーから `View` → `Extensions` → `RankingVegas` を選択して本拡張を開くことができます。
+
 ### セキュリティ / 難読化
 
 .NET アセンブリは逆コンパイルされやすいため、API キーやシークレットなどの機密情報をバイナリに埋め込まないでください。難読化ツールの使用やサーバー側でのトークン交換を検討してください。
