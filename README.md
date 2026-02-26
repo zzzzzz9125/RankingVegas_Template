@@ -6,7 +6,7 @@ A template project for creating a VEGAS Pro extension that provides ranked leade
 
 ## Key features
 
-![Example](images/example.png)
+![Example](./images/example.png)
 
 - Leaderboard system (online-only). In offline mode only time tracking is available.
 - Time tracking and automatic activity/AFK detection
@@ -19,6 +19,7 @@ A template project for creating a VEGAS Pro extension that provides ranked leade
 ## Build and development
 
 - Recommended IDE: Visual Studio 2022 / 2026
+- Supported VEGAS Pro versions: MAGIX VEGAS Pro 14+ / Sony VEGAS Pro 13
 - Package management: NuGet
 - Target framework: .NET Framework 4.8
 

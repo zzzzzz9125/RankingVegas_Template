@@ -6,7 +6,7 @@
 
 ## 项目特点
 
-![Example](images/example.png)
+![Example](./images/example.png)
 
 - 排行榜系统（仅在线）。离线模式下仅可使用计时功能。
 - 计时与自动活动/挂机检测
@@ -19,6 +19,7 @@
 ## 构建与开发
 
 - 推荐 IDE：Visual Studio 2022 / 2026
+- 支持的 VEGAS Pro 版本：MAGIX VEGAS Pro 14+ / Sony VEGAS Pro 13
 - 包管理：NuGet
 - 目标框架：.NET Framework 4.8
 

@@ -6,7 +6,7 @@ VEGAS Pro 拡張を作るためのテンプレートプロジェクトです。�
 
 ## 主な機能
 
-![Example](images/example.png)
+![Example](./images/example.png)
 
 - ランキング機能（オンラインのみ）。オフラインモードではタイムトラッキングのみ利用可能です。
 - タイムトラッキングと自動アクティビティ/AFK 検出
@@ -19,6 +19,7 @@ VEGAS Pro 拡張を作るためのテンプレートプロジェクトです。�
 ## ビルドと開発
 
 - 推奨 IDE: Visual Studio 2022 / 2026
+- サポートされている VEGAS Pro バージョン: MAGIX VEGAS Pro 14+ / Sony VEGAS Pro 13
 - パッケージ管理: NuGet
 - ターゲットフレームワーク: .NET Framework 4.8
 
