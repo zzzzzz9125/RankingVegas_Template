@@ -6,6 +6,8 @@ A template project for creating a VEGAS Pro extension that provides ranked leade
 
 ## Key features
 
+![Example](images/example.png)
+
 - Leaderboard system (online-only). In offline mode only time tracking is available.
 - Time tracking and automatic activity/AFK detection
 - Group management for leaderboards (manage separate leaderboard groups)
