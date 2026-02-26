@@ -1,6 +1,6 @@
-﻿// How to use: Copy this file to RankingAppProfile.Local.cs, fill in real values and change "#if false" to "#if true".
+﻿// How to use: Copy this file to RankingAppProfile.Local.cs, fill in real values and change "#if DEMO" to "#if !DEMO".
 // Make sure RankingAppProfile.Local.cs is NOT committed to git.
-#if false
+#if DEMO
 namespace RankingVegas
 {
     internal static partial class RankingAppProfile
@@ -17,20 +17,22 @@ namespace RankingVegas
         /// <param name="webDomain">The web frontend domain (hostname) for constructing public URLs.</param>
         /// <param name="apiDomains">An array of allowed domains (hostnames) for API and web requests; typically includes both apiDomain and webDomain.</param>
         /// <param name="configEncryptionKey">A key used to encrypt local configuration or secrets; keep this secure and do not commit it to source control. If it's null or empty, no encryption will be performed.</param>
-        static partial void LoadLocalSettings(ref string appId, ref string appSecret, ref string leaderboardName, ref string appDisplayName, ref string apiDomain, ref string webDomain, ref string[] apiDomains, ref string configEncryptionKey)
+        /// <param name="isDemo">When it's set to true, it will ignore server connection failures and populate the leaderboard with demo data when the server is unreachable.</param>
+        static partial void LoadLocalSettings(ref string appId, ref string appSecret, ref string leaderboardName, ref string appDisplayName, ref string apiDomain, ref string webDomain, ref string[] apiDomains, ref string configEncryptionKey, ref bool isDemo)
         {
-            appId = "YOUR_APP_ID_HERE";
-            appSecret = "YOUR_APP_SECRET_HERE";
-            leaderboardName = "Leaderboard";
+            appId = "";
+            appSecret = "";
+            leaderboardName = "Leaderboard - Demo";
             appDisplayName = "Ranking";
-            apiDomain = "api.your.site";
-            webDomain = "your.site";
+            apiDomain = "";
+            webDomain = "";
             apiDomains = new[]
             {
                 apiDomain,
                 webDomain
             };
-            configEncryptionKey = "YOUR_CONFIG_ENCRYPTION_KEY_HERE";
+            configEncryptionKey = "";
+            isDemo = true;
         }
     }
 }

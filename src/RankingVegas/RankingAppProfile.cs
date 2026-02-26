@@ -18,6 +18,8 @@
         internal static readonly string AppDisplayName;
         internal static readonly string ConfigEncryptionKey;
 
+        internal static readonly bool IsDemo;
+
         static RankingAppProfile()
         {
             string appId = null;
@@ -28,8 +30,9 @@
             string webDomain = null;
             string[] apiDomains = null;
             string configEncryptionKey = null;
+            bool isDemo = false;
 
-            LoadLocalSettings(ref appId, ref appSecret, ref leaderboardName, ref appDisplayName, ref apiDomain, ref webDomain, ref apiDomains, ref configEncryptionKey);
+            LoadLocalSettings(ref appId, ref appSecret, ref leaderboardName, ref appDisplayName, ref apiDomain, ref webDomain, ref apiDomains, ref configEncryptionKey, ref isDemo);
 
             AppId = appId ?? string.Empty;
             AppSecret = appSecret ?? string.Empty;
@@ -39,6 +42,7 @@
             WebDomain = webDomain;
             ApiDomains = NormalizeDomains(apiDomains, ApiDomain, WebDomain);
             ConfigEncryptionKey = configEncryptionKey ?? string.Empty;
+            IsDemo = isDemo;
 
             ApiOrigin = $"https://{ApiDomain}";
             WebOrigin = $"https://{WebDomain}";
@@ -84,6 +88,6 @@
             return domains.ToArray();
         }
 
-        static partial void LoadLocalSettings(ref string appId, ref string appSecret, ref string leaderboardName, ref string appDisplayName, ref string apiDomain, ref string webDomain, ref string[] apiDomains, ref string configEncryptionKey);
+        static partial void LoadLocalSettings(ref string appId, ref string appSecret, ref string leaderboardName, ref string appDisplayName, ref string apiDomain, ref string webDomain, ref string[] apiDomains, ref string configEncryptionKey, ref bool isDemo);
     }
 }

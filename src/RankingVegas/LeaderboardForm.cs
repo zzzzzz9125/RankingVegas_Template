@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace RankingVegas
         private UserInfo currentUserInfo;
         private int currentUserRank;
         private LeaderboardGroupManager groupManager;
-        
+
         private ListView listViewLeaderboard;
         private Button btnPreviousPage;
         private Button btnNextPage;
@@ -26,13 +27,13 @@ namespace RankingVegas
         private Button btnManageGroups;
         private Button btnAddToGroup;
         private Label lblGroupFilter;
-        
+
         private int currentPage = 0;
         private const int PAGE_SIZE = 50;
         private int totalEntries = 0;
         private LeaderboardData currentLeaderboard;
         private LeaderboardEntry[] originalEntries;
-        
+
         public LeaderboardForm(RankingConfig config, RankingApiClient apiClient, UserInfo currentUserInfo, int currentUserRank)
         {
             this.config = config;
@@ -40,22 +41,23 @@ namespace RankingVegas
             this.currentUserInfo = currentUserInfo;
             this.currentUserRank = currentUserRank;
             this.groupManager = LeaderboardGroupManager.Load();
-            
+
             InitializeComponents();
             LoadLeaderboard();
         }
-        
+
         private void InitializeComponents()
         {
             this.Text = RankingAppProfile.LeaderboardName ?? "Leaderboard";
             this.Width = 550;
             this.Height = 650;
+            this.ShowIcon = false;
             this.MinimumSize = new Size(550, 650);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.BackColor = RankingVegasCommand.UIBackColor;
             this.ForeColor = RankingVegasCommand.UIForeColor;
             this.Font = new Font(Localization.FontFamily, 9F);
-            
+
             // Header panel with group filter
             pnlHeader = new Panel
             {
@@ -65,7 +67,7 @@ namespace RankingVegas
                 BorderStyle = BorderStyle.FixedSingle,
                 Padding = new Padding(10, 8, 10, 8)
             };
-            
+
             lblGroupFilter = new Label
             {
                 Text = Localization.Text("分组:", "Group:", "グループ:"),
@@ -74,7 +76,7 @@ namespace RankingVegas
                 ForeColor = RankingVegasCommand.UIForeColor
             };
             pnlHeader.Controls.Add(lblGroupFilter);
-            
+
             cboGroup = new ComboBox
             {
                 Location = new Point(65, 9),
@@ -86,7 +88,7 @@ namespace RankingVegas
             };
             cboGroup.SelectedIndexChanged += CboGroup_SelectedIndexChanged;
             pnlHeader.Controls.Add(cboGroup);
-            
+
             btnManageGroups = new Button
             {
                 Text = Localization.Text("管理", "Manage", "管理"),
@@ -100,7 +102,7 @@ namespace RankingVegas
             btnManageGroups.FlatAppearance.BorderColor = ControlPaint.Dark(RankingVegasCommand.UIBackColor, 0.2f);
             btnManageGroups.Click += BtnManageGroups_Click;
             pnlHeader.Controls.Add(btnManageGroups);
-            
+
             btnAddToGroup = new Button
             {
                 Text = Localization.Text("添加选中到分组", "Add Selected to Group", "選択をグループに追加"),
@@ -115,7 +117,7 @@ namespace RankingVegas
             btnAddToGroup.FlatAppearance.BorderColor = ControlPaint.Dark(RankingVegasCommand.UIBackColor, 0.2f);
             btnAddToGroup.Click += BtnAddToGroup_Click;
             pnlHeader.Controls.Add(btnAddToGroup);
-            
+
             // ListView
             listViewLeaderboard = new ListView
             {
@@ -146,7 +148,7 @@ namespace RankingVegas
 
             // Don't add listViewLeaderboard here yet - will add after footer for correct dock order
             UpdateColumnWidths();
-            
+
             // Footer
             pnlFooter = new Panel
             {
@@ -215,24 +217,24 @@ namespace RankingVegas
             footerLayout.Controls.Add(btnClose, 2, 0);
 
             pnlFooter.Controls.Add(footerLayout);
-            
+
             // WinForms dock layout order: last added docks first (highest priority)
             // Add ListView (Fill) first, then edge panels, so edges dock before Fill
             this.Controls.Add(listViewLeaderboard);
             this.Controls.Add(pnlHeader);
             this.Controls.Add(pnlFooter);
-            
+
             // Load group combo box
             RefreshGroupComboBox();
         }
-        
+
         private void RefreshGroupComboBox()
         {
             cboGroup.Items.Clear();
-            
+
             // Add "Total" option
             cboGroup.Items.Add(new GroupComboItem(null, Localization.Text("总榜", "Total", "総合")));
-            
+
             // Add user groups
             if (groupManager.Groups != null)
             {
@@ -244,7 +246,7 @@ namespace RankingVegas
                     cboGroup.Items.Add(new GroupComboItem(group, $"{typePrefix} {group.Name}"));
                 }
             }
-            
+
             // Select current group
             int selectedIndex = 0;
             if (groupManager.SelectedGroupId != LeaderboardGroupManager.TotalGroupId)
@@ -260,14 +262,14 @@ namespace RankingVegas
             }
             cboGroup.SelectedIndex = selectedIndex;
         }
-        
+
         private void CboGroup_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (cboGroup.SelectedItem is GroupComboItem item)
             {
                 groupManager.SelectedGroupId = item.Group?.Id ?? LeaderboardGroupManager.TotalGroupId;
                 groupManager.Save();
-                
+
                 // Refresh display with current data
                 if (originalEntries != null)
                 {
@@ -275,14 +277,14 @@ namespace RankingVegas
                 }
             }
         }
-        
+
         private void ListViewLeaderboard_SelectedIndexChanged(object sender, EventArgs e)
         {
-            btnAddToGroup.Enabled = listViewLeaderboard.SelectedItems.Count > 0 && 
-                                   groupManager.Groups != null && 
+            btnAddToGroup.Enabled = listViewLeaderboard.SelectedItems.Count > 0 &&
+                                   groupManager.Groups != null &&
                                    groupManager.Groups.Count > 0;
         }
-        
+
         private void BtnManageGroups_Click(object sender, EventArgs e)
         {
             using (var form = new ManageGroupsForm(groupManager, () => RefreshGroupComboBox()))
@@ -290,19 +292,19 @@ namespace RankingVegas
                 form.ShowDialog(this);
             }
             RefreshGroupComboBox();
-            
+
             // Refresh display
             if (originalEntries != null)
             {
                 UpdateLeaderboardUI();
             }
         }
-        
+
         private void BtnAddToGroup_Click(object sender, EventArgs e)
         {
             if (listViewLeaderboard.SelectedItems.Count == 0)
                 return;
-            
+
             if (groupManager.Groups == null || groupManager.Groups.Count == 0)
             {
                 MessageBox.Show(
@@ -312,27 +314,27 @@ namespace RankingVegas
                     MessageBoxIcon.Information);
                 return;
             }
-            
+
             // Show group selection context menu
             ContextMenuStrip menu = new ContextMenuStrip();
             menu.BackColor = RankingVegasCommand.UIBackColor;
             menu.ForeColor = RankingVegasCommand.UIForeColor;
-            
+
             foreach (var group in groupManager.Groups)
             {
                 string typePrefix = group.IsWhitelist
                     ? Localization.Text("[白]", "[W]", "[白]")
                     : Localization.Text("[黑]", "[B]", "[黒]");
-                
+
                 ToolStripMenuItem item = new ToolStripMenuItem($"{typePrefix} {group.Name}");
                 item.Tag = group;
                 item.Click += AddToGroupMenuItem_Click;
                 menu.Items.Add(item);
             }
-            
+
             menu.Show(btnAddToGroup, new Point(0, btnAddToGroup.Height));
         }
-        
+
         private void AddToGroupMenuItem_Click(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem menuItem && menuItem.Tag is LeaderboardGroup group)
@@ -349,7 +351,7 @@ namespace RankingVegas
                         }
                     }
                 }
-                
+
                 if (addedCount > 0)
                 {
                     groupManager.Save();
@@ -358,7 +360,7 @@ namespace RankingVegas
                         Localization.Text("成功", "Success", "成功"),
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
-                    
+
                     // Refresh display if current filter is affected
                     if (groupManager.SelectedGroupId == group.Id)
                     {
@@ -367,7 +369,7 @@ namespace RankingVegas
                 }
             }
         }
-        
+
         private void BtnPreviousPage_Click(object sender, EventArgs e)
         {
             if (currentPage > 0)
@@ -376,7 +378,7 @@ namespace RankingVegas
                 LoadLeaderboard();
             }
         }
-        
+
         private void BtnNextPage_Click(object sender, EventArgs e)
         {
             int maxPage = (totalEntries + PAGE_SIZE - 1) / PAGE_SIZE;
@@ -386,26 +388,36 @@ namespace RankingVegas
                 LoadLeaderboard();
             }
         }
-        
+
         private void LoadLeaderboard()
         {
             btnPreviousPage.Enabled = false;
             btnNextPage.Enabled = false;
             lblPageInfo.Text = Localization.Text("加载中...", "Loading...", "読み込み中...");
-            
+
             Task.Run(() =>
             {
                 try
                 {
+                    if (RankingAppProfile.IsDemo && apiClient == null)
+                    {
+                        currentPage = 0;
+                        currentLeaderboard = CreateDemoLeaderboardData(10);
+                        originalEntries = currentLeaderboard.Leaderboard;
+                        totalEntries = originalEntries?.Length ?? 0;
+                        SafeInvokeUpdateLeaderboard();
+                        return;
+                    }
+
                     int offset = currentPage * PAGE_SIZE;
                     var response = apiClient.GetLeaderboard(PAGE_SIZE, offset);
-                    
+
                     if (response.Success && response.Data != null)
                     {
                         currentLeaderboard = response.Data;
                         originalEntries = response.Data.Leaderboard;
                         totalEntries = response.Data.Leaderboard?.Length ?? 0;
-                        
+
                         if (InvokeRequired)
                         {
                             Invoke(new Action(() => UpdateLeaderboardUI()));
@@ -417,14 +429,36 @@ namespace RankingVegas
                     }
                     else
                     {
-                        MessageBox.Show(Localization.Format("获取排行榜失败: {0}", "Failed to get leaderboard: {0}", "ランキングの取得に失敗しました: {0}", response.Message),
-                            Localization.Text("错误", "Error", "エラー"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        if (RankingAppProfile.IsDemo)
+                        {
+                            currentPage = 0;
+                            currentLeaderboard = CreateDemoLeaderboardData(10);
+                            originalEntries = currentLeaderboard.Leaderboard;
+                            totalEntries = originalEntries?.Length ?? 0;
+                            SafeInvokeUpdateLeaderboard();
+                        }
+                        else
+                        {
+                            MessageBox.Show(Localization.Format("获取排行榜失败: {0}", "Failed to get leaderboard: {0}", "ランキングの取得に失敗しました: {0}", response.Message),
+                                Localization.Text("错误", "Error", "エラー"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(Localization.Format("加载排行榜异常: {0}", "Leaderboard load error: {0}", "ランキングの読み込みエラー: {0}", ex.Message),
-                        Localization.Text("错误", "Error", "エラー"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (RankingAppProfile.IsDemo)
+                    {
+                        currentPage = 0;
+                        currentLeaderboard = CreateDemoLeaderboardData(10);
+                        originalEntries = currentLeaderboard.Leaderboard;
+                        totalEntries = originalEntries?.Length ?? 0;
+                        SafeInvokeUpdateLeaderboard();
+                    }
+                    else
+                    {
+                        MessageBox.Show(Localization.Format("加载排行榜异常: {0}", "Leaderboard load error: {0}", "ランキングの読み込みエラー: {0}", ex.Message),
+                            Localization.Text("错误", "Error", "エラー"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
                 finally
                 {
@@ -446,15 +480,58 @@ namespace RankingVegas
                 }
             });
         }
-        
+
+        private void SafeInvokeUpdateLeaderboard()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => UpdateLeaderboardUI()));
+            }
+            else
+            {
+                UpdateLeaderboardUI();
+            }
+        }
+
+        private LeaderboardData CreateDemoLeaderboardData(int count)
+        {
+            var random = new Random();
+            int[] demoIds = new[] { 1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999, 114514 };
+            var entries = new LeaderboardEntry[count];
+            for (int i = 0; i < count; i++)
+            {
+                entries[i] = new LeaderboardEntry
+                {
+                    UserId = demoIds[i % demoIds.Length],
+                    Nickname = $"DemoUser{i + 1}",
+                    TotalDuration = random.Next(300, 200000),
+                    Rank = i + 1
+                };
+            }
+
+            var sorted = entries.OrderByDescending(e => e.TotalDuration).ToArray();
+            for (int i = 0; i < sorted.Length; i++)
+            {
+                sorted[i].Rank = i + 1;
+            }
+
+            return new LeaderboardData
+            {
+                AppId = 0,
+                AppName = RankingAppProfile.LeaderboardName,
+                IsVerified = false,
+                Leaderboard = sorted
+            };
+        }
+
         private void UpdateLeaderboardUI()
         {
             listViewLeaderboard.BeginUpdate();
             listViewLeaderboard.Items.Clear();
-            
+
             // Apply group filter
             var entries = groupManager.FilterLeaderboard(originalEntries);
-            
+
             if (entries != null)
             {
                 foreach (var entry in entries)
@@ -464,7 +541,7 @@ namespace RankingVegas
                     item.SubItems.Add(FormatDuration(entry.TotalDuration));
                     item.SubItems.Add(entry.UserId.ToString());
                     item.Tag = entry.UserId;
-                    
+
                     if (currentUserInfo != null && entry.UserId == currentUserInfo.UserId)
                     {
                         item.BackColor = ControlPaint.Light(RankingVegasCommand.UIBackColor, 0.1f);
@@ -472,24 +549,24 @@ namespace RankingVegas
                         item.Font = new Font(listViewLeaderboard.Font, FontStyle.Bold);
                         currentUserRank = entry.Rank;
                     }
-                    
+
                     listViewLeaderboard.Items.Add(item);
                 }
             }
-            
+
             listViewLeaderboard.EndUpdate();
             UpdatePageInfo();
         }
-        
+
         private void UpdatePageInfo()
         {
             var selectedGroup = groupManager.GetSelectedGroup();
             string groupName = selectedGroup != null ? selectedGroup.Name : Localization.Text("总榜", "Total", "総合");
-            
+
             int displayCount = listViewLeaderboard.Items.Count;
             int maxPage = Math.Max(1, (totalEntries + PAGE_SIZE - 1) / PAGE_SIZE);
-            
-            lblPageInfo.Text = Localization.Format("{0} - 第 {1}/{2} 页 ({3})", "{0} - Page {1}/{2} ({3})", "{0} - {1}/{2} ページ ({3})", 
+
+            lblPageInfo.Text = Localization.Format("{0} - 第 {1}/{2} 页 ({3})", "{0} - Page {1}/{2} ({3})", "{0} - {1}/{2} ページ ({3})",
                 groupName, currentPage + 1, maxPage, displayCount);
         }
 
@@ -514,7 +591,7 @@ namespace RankingVegas
             listViewLeaderboard.Columns[2].Width = durationWidth;
             listViewLeaderboard.Columns[3].Width = idWidth;
         }
-        
+
         private string GetRankEmoji(int rank)
         {
             switch (rank)
@@ -525,11 +602,11 @@ namespace RankingVegas
                 default: return rank <= 10 ? "🏅" : "⭐";
             }
         }
-        
+
         private string FormatDuration(int seconds)
         {
             TimeSpan time = TimeSpan.FromSeconds(seconds);
-            
+
             if (time.TotalHours >= 1)
             {
                 return Localization.Format("{0:F1} 小时", "{0:F1} hrs", "{0:F1} 時間", time.TotalHours);
@@ -543,18 +620,18 @@ namespace RankingVegas
                 return Localization.Format("{0} 秒", "{0} secs", "{0} 秒", seconds);
             }
         }
-        
+
         private class GroupComboItem
         {
             public LeaderboardGroup Group { get; }
             public string DisplayText { get; }
-            
+
             public GroupComboItem(LeaderboardGroup group, string displayText)
             {
                 Group = group;
                 DisplayText = displayText;
             }
-            
+
             public override string ToString()
             {
                 return DisplayText;

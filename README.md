@@ -42,6 +42,10 @@ https://otm.ink/article/api-ranking
 
 If your API differs from the reference, you may need to adapt some client-side logic in `RankingApiClient`.
 
+### Quick offline demo build
+
+If you want to quickly compile an offline demo build, add the conditional compilation symbol `DEMO` in the project settings (Build → Conditional compilation symbols). This enables the template AppProfile and compiles the project in a demo mode that will ignore server connection failures and populate the leaderboard with demo data when the server is unreachable.
+
 ### Assembly information
 
 Edit `Properties/AssemblyInfo.cs` to set product, company and version metadata for the generated assembly.

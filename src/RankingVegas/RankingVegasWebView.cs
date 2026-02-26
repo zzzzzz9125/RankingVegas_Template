@@ -5,14 +5,13 @@ using Sony.Vegas;
 #endif
 
 using System;
-using System.Drawing;
-using System.Windows.Forms;
-using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+using System.Drawing;
 using Newtonsoft.Json;
+using System.Windows.Forms;
+using System.Threading.Tasks;
 using Microsoft.Web.WebView2.Core;
-using System.Security.Policy;
 
 namespace RankingVegas
 {
@@ -31,11 +30,7 @@ namespace RankingVegas
         private bool isWebViewReady = false;
         private bool hasWebViewReady = false;
         private Timer delayedInitTimer;
-        private const int WebViewLeaderboardLimit = 50;
-        private bool lastOfflineState = false;
-        private string lastAvatarUrl = null;
         private LeaderboardGroupManager groupManager;
-        private LeaderboardEntry[] cachedLeaderboardEntries;
 
         public RankingVegasWebView()
             : base("RankingVegas")
@@ -52,7 +47,7 @@ namespace RankingVegas
 
         public override DockWindowStyle DefaultDockWindowStyle
         {
-            get { return DockWindowStyle.Docked; }
+            get { return DockWindowStyle.Floating; }
         }
 
         public override Size DefaultFloatingSize
@@ -383,9 +378,17 @@ namespace RankingVegas
         
         public void RefreshFromGlobalState(TimeTracker timeTracker, RankingConfig config, RankingApiClient apiClient)
         {
-            if (timeTracker == null || config == null || apiClient == null)
-                return;
-            
+            if (RankingAppProfile.IsDemo)
+            {
+                if (timeTracker == null || config == null)
+                    return;
+            }
+            else
+            {
+                if (timeTracker == null || config == null || apiClient == null)
+                    return;
+            }
+
             if (InvokeRequired)
             {
                 try
@@ -397,17 +400,17 @@ namespace RankingVegas
                 }
                 return;
             }
-            
+
             if (GlobalTimeTracker != null && isInitialized)
             {
                 GlobalTimeTracker.TimeUpdated -= TimeTracker_TimeUpdated;
                 GlobalTimeTracker.StatusChanged -= TimeTracker_StatusChanged;
             }
-            
+
             GlobalTimeTracker = timeTracker;
             GlobalConfig = config;
             GlobalApiClient = apiClient;
-            
+
             InitializeFromGlobalState();
         }
         
@@ -611,7 +614,6 @@ namespace RankingVegas
                 
                 currentUserInfo = null;
                 currentUserRank = 0;
-                lastAvatarUrl = null;
                 
                 if (GlobalTimeTracker != null)
                 {
@@ -1052,16 +1054,22 @@ namespace RankingVegas
 
             try
             {
-                cachedLeaderboardEntries = leaderboardData.Leaderboard;
-
                 var leaderboardList = new System.Collections.Generic.List<object>();
 
                 foreach (var entry in leaderboardData.Leaderboard)
                 {
-                    string avatarUrl = ImageHelper.NormalizeAvatarUrl(entry.Avatar);
-                    // Use cached avatar as data URL if available
-                    string cachedDataUrl = ImageHelper.GetCachedAvatarAsDataUrl(entry.Avatar);
-                    string avatarSrc = cachedDataUrl ?? avatarUrl;
+                    string avatarSrc;
+                    if (!string.IsNullOrEmpty(entry.Avatar) && entry.Avatar.StartsWith("data:"))
+                    {
+                        // Already a data URL (e.g. from demo mode), use directly
+                        avatarSrc = entry.Avatar;
+                    }
+                    else
+                    {
+                        string avatarUrl = ImageHelper.NormalizeAvatarUrl(entry.Avatar);
+                        string cachedDataUrl = ImageHelper.GetCachedAvatarAsDataUrl(entry.Avatar);
+                        avatarSrc = cachedDataUrl ?? avatarUrl;
+                    }
 
                     leaderboardList.Add(new
                     {
@@ -1125,35 +1133,6 @@ namespace RankingVegas
             ExecuteScript("if(typeof renderGroupList==='function')renderGroupList()");
         }
 
-        private void HandleUpdateHideTimer(object data)
-        {
-            if (GlobalConfig == null) return;
-            bool hide = false;
-            if (data is bool) hide = (bool)data;
-            else if (data != null) bool.TryParse(data.ToString(), out hide);
-            // Legacy 'Hide' semantics: invert when storing into new 'Show' property
-            GlobalConfig.ShowTimer = !hide;
-            GlobalConfig.Save();
-        }
-
-        private void HandleUpdateHideStatus(object data)
-        {
-            if (GlobalConfig == null) return;
-            bool hide = false;
-            if (data is bool) hide = (bool)data;
-            else if (data != null) bool.TryParse(data.ToString(), out hide);
-            // Legacy 'Hide' semantics: invert when storing into new 'Show' property
-            GlobalConfig.ShowStatus = !hide;
-            GlobalConfig.Save();
-        }
-
-        private void SendHideSettings()
-        {
-            // Keep compatibility: send current 'show' settings to UI (frontend expects show values now)
-            if (!isWebViewReady || GlobalConfig == null) return;
-            ExecuteScript($"updateShowSettings({GlobalConfig.ShowTimer.ToString().ToLower()}, {GlobalConfig.ShowStatus.ToString().ToLower()}, {GlobalConfig.ShowAccount.ToString().ToLower()}, {GlobalConfig.ShowVegasInfo.ToString().ToLower()})");
-        }
-
         private Image ResizeImageForAvatar(Image image, int maxWidth, int maxHeight)
         {
             double ratio = Math.Min((double)maxWidth / image.Width, (double)maxHeight / image.Height);
@@ -1215,7 +1194,7 @@ namespace RankingVegas
                 try {
                     var response = GlobalApiClient.GetUserInfo(GlobalConfig.SessionCode);
                     Action handler = () => {
-                        if (response.Success && response.Data != null) { currentUserInfo = response.Data; SetOfflineMode(false); lastAvatarUrl = response.Data.Avatar; }
+                        if (response.Success && response.Data != null) { currentUserInfo = response.Data; SetOfflineMode(false); }
                         else { currentUserInfo = null; SetOfflineMode(true); }
                         SendUserInfo(); LoadLeaderboard();
                     };
@@ -1229,20 +1208,88 @@ namespace RankingVegas
 
         private void LoadLeaderboard()
         {
-            if (GlobalApiClient == null) return;
+            if (RankingAppProfile.IsDemo && GlobalApiClient == null)
+            {
+                SendLeaderboard(CreateDemoLeaderboardData(10));
+                return;
+            }
+
             Task.Run(() => {
                 try {
                     var response = GlobalApiClient.GetLeaderboard(50, 0);
                     Action handler = () => {
-                        if (response.Success && response.Data != null) SendLeaderboard(response.Data);
-                        else ExecuteScript($"showError('{EscapeJs(Localization.Format("获取排行榜失败: {0}", "Failed to get leaderboard: {0}", "ランキングの取得に失敗しました: {0}", response.Message))}')");
+                        if (response.Success && response.Data != null)
+                        {
+                            SendLeaderboard(response.Data);
+                        }
+                        else
+                        {
+                            if (RankingAppProfile.IsDemo)
+                            {
+                                SendLeaderboard(CreateDemoLeaderboardData(10));
+                            }
+                            else
+                            {
+                                ExecuteScript($"showError('{EscapeJs(Localization.Format("获取排行榜失败: {0}", "Failed to get leaderboard: {0}", "ランキングの取得に失敗しました: {0}", response.Message))}')");
+                            }
+                        }
                     };
                     if (InvokeRequired) Invoke(handler); else handler();
-                } catch (Exception ex) {
-                    Action errHandler = () => ExecuteScript($"showError('{EscapeJs(Localization.Format("加载排行榜异常: {0}", "Leaderboard load error: {0}", "ランキングの読み込みエラー: {0}", ex.Message))}')");
+                }
+                catch (Exception ex) {
+                    Action errHandler;
+                    if (RankingAppProfile.IsDemo)
+                    {
+                        errHandler = () => SendLeaderboard(CreateDemoLeaderboardData(10));
+                    }
+                    else
+                    {
+                        errHandler = () => ExecuteScript($"showError('{EscapeJs(Localization.Format("加载排行榜异常: {0}", "Leaderboard load error: {0}", "ランキングの読み込みエラー: {0}", ex.Message))}')");
+                    }
                     if (InvokeRequired) { try { Invoke(errHandler); } catch { } } else errHandler();
                 }
             });
+        }
+
+        private LeaderboardData CreateDemoLeaderboardData(int count)
+        {
+            var random = new Random();
+            int[] demoIds = new[] { 1111, 2222, 3333, 4444, 5555, 6666, 7777, 8888, 9999, 114514 };
+            var entries = new LeaderboardEntry[count];
+            
+            string defaultAvatarDataUrl = "";
+            try
+            {
+                byte[] avatarBytes = EmbeddedResourceHelper.ReadEmbeddedResource("default_avatar.jpg");
+                defaultAvatarDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(avatarBytes)}";
+            }
+            catch { }
+            
+            for (int i = 0; i < count; i++)
+            {
+                entries[i] = new LeaderboardEntry
+                {
+                    UserId = demoIds[i % demoIds.Length],
+                    Nickname = $"DemoUser{i + 1}",
+                    Avatar = defaultAvatarDataUrl,
+                    TotalDuration = random.Next(300, 200000),
+                    Rank = i + 1
+                };
+            }
+
+            var sorted = entries.OrderByDescending(e => e.TotalDuration).ToArray();
+            for (int i = 0; i < sorted.Length; i++)
+            {
+                sorted[i].Rank = i + 1;
+            }
+
+            return new LeaderboardData
+            {
+                AppId = 0,
+                AppName = RankingAppProfile.LeaderboardName,
+                IsVerified = false,
+                Leaderboard = sorted
+            };
         }
 
         private void SendTimeUpdate()
@@ -1264,7 +1311,7 @@ namespace RankingVegas
         private void SendConfiguredState()
         {
             if (!isWebViewReady) return;
-            ExecuteScript($"updateConfiguredState({(GlobalConfig != null && GlobalConfig.IsConfigured()).ToString().ToLower()})");
+            ExecuteScript($"updateConfiguredState({(RankingAppProfile.IsDemo || (GlobalConfig != null && GlobalConfig.IsConfigured())).ToString().ToLower()})");
         }
 
         private void SendThemeColors()
@@ -1349,7 +1396,7 @@ namespace RankingVegas
         {
             if (!isWebViewReady) return;
             bool offline = GlobalConfig != null && GlobalConfig.IsOfflineAccount;
-            lastOfflineState = offline; ExecuteScript($"updateOfflineState({offline.ToString().ToLower()})"); UpdateAppTitle();
+            ExecuteScript($"updateOfflineState({offline.ToString().ToLower()})"); UpdateAppTitle();
         }
 
         private int GetOfflineDurationSeconds() { return GlobalTimeTracker != null ? GlobalTimeTracker.GetOfflineTotalDurationSeconds() : 0; }

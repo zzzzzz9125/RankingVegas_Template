@@ -40,7 +40,7 @@ namespace RankingVegas
 
         public override DockWindowStyle DefaultDockWindowStyle
         {
-            get { return DockWindowStyle.Docked; }
+            get { return DockWindowStyle.Floating; }
         }
 
         public override Size DefaultFloatingSize
@@ -91,8 +91,16 @@ namespace RankingVegas
 
         public void RefreshFromGlobalState(TimeTracker timeTracker, RankingConfig config, RankingApiClient apiClient)
         {
-            if (timeTracker == null || config == null || apiClient == null)
-                return;
+            if (RankingAppProfile.IsDemo)
+            {
+                if (timeTracker == null || config == null)
+                    return;
+            }
+            else
+            {
+                if (timeTracker == null || config == null || apiClient == null)
+                    return;
+            }
 
             if (InvokeRequired)
             {
@@ -143,6 +151,12 @@ namespace RankingVegas
             SendVegasInfo();
             UpdateOfflineState();
             SendUserInfo();
+
+            // Load offline avatar on initial setup so the default avatar is shown
+            if (GlobalConfig != null && GlobalConfig.IsOfflineAccount)
+            {
+                LoadOfflineAvatar();
+            }
 
             if (GlobalConfig != null && GlobalConfig.IsConfigured() && !string.IsNullOrEmpty(GlobalConfig.SessionCode))
             {
@@ -334,7 +348,7 @@ namespace RankingVegas
                     Localization.Text(
                         "浏览器已打开绑定页面\n\n请登录完成绑定\n点击【确定】后将自动刷新账号状态\n\n提示：\n若绑定页面返回\"签名验证失败\"，则说明在线排行榜的签名可能已经更换，您当前使用的 RankVegas 扩展的版本无法绑定到当前的在线排行榜。请尝试重新到您获得该分发版本的地方，下载并更新到最新版本。",
                         "Your browser has opened the binding page.\n\nPlease sign in to complete binding.\nClick OK to refresh the account status.\n\nNote:\nIf the binding page returns 'Signature verification failed', the online leaderboard signature may have changed. Please download and update to the latest version.",
-                        "ブラウザで連携ページが開きました。\n\nサインインして連携を完了してください。\nOKをクリックするとアカウント状態が更新されます。\n\n注：\n連携ページで「署名検証失敗」と表示された場合は、オンラインランキングの署名が変更された可能性があります。最新版をダウンロードして更新してください。"),
+                        "ブラウザで連携ページが開かれました。\n\nサインインして連携を完了してください。\nOKをクリックするとアカウント状態が更新されます。\n\n注：\n連携ページで「署名検証失敗」と表示された場合は、オンラインランキングの署名が変更された可能性があります。最新版をダウンロードして更新してください。"),
                     Localization.Text("绑定账号", "Bind Account", "アカウント連携"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 HandleRefresh();
             }
@@ -367,21 +381,6 @@ namespace RankingVegas
             if (result == DialogResult.Yes)
             {
                 GlobalConfig.SessionCode = RankingConfig.GenerateSessionCode();
-                // GlobalConfig.IsOfflineAccount = true;
-                // GlobalConfig.Save();
-                //
-                // currentUserInfo = null;
-                // currentUserRank = 0;
-                // lastAvatarUrl = null;
-                //
-                // if (GlobalTimeTracker != null)
-                // {
-                //     GlobalTimeTracker.SetOfflineMode(true);
-                // }
-                //
-                // UpdateOfflineState();
-                // SendUserInfo();
-                // Use SetOfflineMode to centralize offline transition logic (saves config, updates tracker, loads offline avatar)
                 SetOfflineMode(true);
 
                 currentUserInfo = null;
@@ -475,13 +474,16 @@ namespace RankingVegas
 
         private void HandleShowLeaderboard()
         {
-            if (GlobalConfig == null || !GlobalConfig.IsConfigured())
+            if (!RankingAppProfile.IsDemo)
             {
-                MessageBox.Show(
-                    Localization.Text("配置未初始化", "Configuration is not initialized", "設定が初期化されていません"),
-                    Localization.Text("错误", "Error", "エラー"),
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                if (GlobalConfig == null || !GlobalConfig.IsConfigured())
+                {
+                    MessageBox.Show(
+                        Localization.Text("配置未初始化", "Configuration is not initialized", "設定が初期化されていません"),
+                        Localization.Text("错误", "Error", "エラー"),
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
             }
 
             if (leaderboardForm != null && !leaderboardForm.IsDisposed)
@@ -653,7 +655,7 @@ namespace RankingVegas
         {
             bool configured = GlobalConfig != null && GlobalConfig.IsConfigured();
             btnBind.Enabled = configured;
-            btnRefreshLeaderboard.Enabled = configured;
+            btnRefreshLeaderboard.Enabled = RankingAppProfile.IsDemo || configured;
         }
 
         private void SendVegasInfo()
@@ -959,31 +961,38 @@ namespace RankingVegas
 
         private Image CreateDefaultAvatar()
         {
-            Bitmap avatar = new Bitmap(60, 60);
+            try
+            {
+                byte[] avatarBytes = EmbeddedResourceHelper.ReadEmbeddedResource("default_avatar.jpg");
+                using (var ms = new System.IO.MemoryStream(avatarBytes))
+                {
+                    Image loadedAvatar = Image.FromStream(ms);
+                    Image roundedAvatar = ImageHelper.MakeRoundedImage(loadedAvatar, 8);
+                    loadedAvatar.Dispose();
+                    return roundedAvatar;
+                }
+            }
+            catch { }
 
-            using (Graphics g = Graphics.FromImage(avatar))
+            Bitmap placeholderAvatar = new Bitmap(60, 60);
+            using (Graphics g = Graphics.FromImage(placeholderAvatar))
             {
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
                 using (SolidBrush brush = new SolidBrush(ControlPaint.Dark(RankingVegasCommand.UIBackColor, 0.05f)))
                 {
                     g.FillEllipse(brush, 0, 0, 60, 60);
                 }
-
                 using (Font font = new Font(Localization.FontFamily, 18, FontStyle.Bold))
                 {
                     string text = "?";
                     SizeF textSize = g.MeasureString(text, font);
                     using (SolidBrush textBrush = new SolidBrush(RankingVegasCommand.UIForeColor))
                     {
-                        g.DrawString(text, font, textBrush,
-                            (60 - textSize.Width) / 2,
-                            (60 - textSize.Height) / 2);
+                        g.DrawString(text, font, textBrush, (60 - textSize.Width) / 2, (60 - textSize.Height) / 2);
                     }
                 }
             }
-
-            return ImageHelper.MakeRoundedImage(avatar, 8);
+            return ImageHelper.MakeRoundedImage(placeholderAvatar, 8);
         }
 
         #endregion

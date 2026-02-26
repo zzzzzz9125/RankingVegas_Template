@@ -1426,7 +1426,8 @@
 
                 if (userInfo.avatar) {
                     let avatarUrl = userInfo.avatar;
-                    if (!avatarUrl.startsWith('http')) {
+                    // Don't prepend origin to data URLs or already absolute URLs
+                    if (!avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
                         avatarUrl = appProfile.avatarOrigin + avatarUrl;
                     }
                     avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Avatar" onerror="this.parentElement.innerHTML='?'">`;
@@ -1493,7 +1494,8 @@
                 let avatarHtml = '?';
                 if (entry.avatar) {
                     let avatarUrl = entry.avatar;
-                    if (!avatarUrl.startsWith('http')) {
+                    // Don't prepend origin to data URLs or already absolute URLs
+                    if (!avatarUrl.startsWith('http') && !avatarUrl.startsWith('data:')) {
                         avatarUrl = appProfile.avatarOrigin + avatarUrl;
                     }
                     avatarHtml = `<img src="${avatarUrl}" alt="" onerror="this.parentElement.innerHTML='?'">`;

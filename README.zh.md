@@ -42,6 +42,10 @@ https://otm.ink/article/api-ranking
 
 若你的服务器 API 与参考不同，可能需要修改 `RankingApiClient` 中的部分逻辑以匹配实际接口。
 
+### 快速生成离线演示版
+
+若想快速编译一个离线演示版，请在项目设置中（生成 → 条件编译符号）添加 `DEMO` 符号。这会启用模板的 AppProfile，并在无法连接到服务器时忽略连接问题，改用内置的演示数据来填充排行榜。
+
 ### Assembly 信息
 
 编辑 `Properties/AssemblyInfo.cs`，填写产品名、公司名与版本等程序集元数据。

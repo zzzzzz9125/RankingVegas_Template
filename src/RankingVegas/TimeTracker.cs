@@ -7,7 +7,6 @@ using Sony.Vegas;
 using System;
 using System.Timers;
 using System.Diagnostics;
-using System.Text;
 
 namespace RankingVegas
 {

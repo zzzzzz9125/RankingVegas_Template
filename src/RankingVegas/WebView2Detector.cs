@@ -4,7 +4,6 @@ using ScriptPortal.Vegas;
 using Sony.Vegas;
 #endif
 
-using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 
