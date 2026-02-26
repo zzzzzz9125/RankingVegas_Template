@@ -54,7 +54,7 @@
         {
             if (isOffline)
             {
-                return Localization.Text("离线账号", "Offline Account", "オフラインアカウント");
+                return Localization.Text("离线", "Offline", "オフライン");
             }
 
             return AppDisplayName;

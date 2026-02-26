@@ -13,9 +13,9 @@ namespace RankingVegas
     public enum ActivityCategory
     {
         None,
-        Project,
         Markers,
         Track,
+        TrackState,
         TrackEvent
     }
 
@@ -120,13 +120,12 @@ namespace RankingVegas
         
         private void RegisterVegasEvents()
         {
-            vegas.ProjectOpened += Vegas_ProjectActivity;
             vegas.TrackCountChanged += Vegas_TrackActivity;
             vegas.TrackEventCountChanged += Vegas_TrackEventActivity;
             vegas.TrackEventStateChanged += Vegas_TrackEventActivity;
             vegas.TrackEventTimeChanged += Vegas_TrackEventActivity;
             vegas.MarkersChanged += Vegas_MarkersActivity;
-            vegas.TrackStateChanged += Vegas_TrackActivity;
+            vegas.TrackStateChanged += Vegas_TrackStateActivity;
             
             vegas.RenderStarted += Vegas_RenderStarted;
             vegas.RenderFinished += Vegas_RenderFinished;
@@ -134,21 +133,15 @@ namespace RankingVegas
         
         private void UnregisterVegasEvents()
         {
-            vegas.ProjectOpened -= Vegas_ProjectActivity;
             vegas.TrackCountChanged -= Vegas_TrackActivity;
             vegas.TrackEventCountChanged -= Vegas_TrackEventActivity;
             vegas.TrackEventStateChanged -= Vegas_TrackEventActivity;
             vegas.TrackEventTimeChanged -= Vegas_TrackEventActivity;
             vegas.MarkersChanged -= Vegas_MarkersActivity;
-            vegas.TrackStateChanged -= Vegas_TrackActivity;
+            vegas.TrackStateChanged -= Vegas_TrackStateActivity;
             
             vegas.RenderStarted -= Vegas_RenderStarted;
             vegas.RenderFinished -= Vegas_RenderFinished;
-        }
-        
-        private void Vegas_ProjectActivity(object sender, EventArgs e)
-        {
-            HandleActivity(ActivityCategory.Project);
         }
         
         private void Vegas_MarkersActivity(object sender, EventArgs e)
@@ -160,7 +153,12 @@ namespace RankingVegas
         {
             HandleActivity(ActivityCategory.Track);
         }
-        
+
+        private void Vegas_TrackStateActivity(object sender, EventArgs e)
+        {
+            HandleActivity(ActivityCategory.TrackState);
+        }
+
         private void Vegas_TrackEventActivity(object sender, EventArgs e)
         {
             HandleActivity(ActivityCategory.TrackEvent);
